@@ -1,4 +1,5 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
+
+import { Moon, Sun, Monitor, LogOut } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +18,19 @@ const SettingsView = () => {
     { value: 'dark', label: 'Dark', icon: Moon },
     { value: 'system', label: 'System', icon: Monitor },
   ];
+
+  const handleLogout = () => {
+    // Clear any stored data
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // You can add additional logout logic here
+    // For example, redirecting to login page or clearing auth tokens
+    console.log('User logged out');
+    
+    // Optionally reload the page to reset the app state
+    window.location.reload();
+  };
 
   return (
     <div className="flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -79,6 +93,27 @@ const SettingsView = () => {
                     </Button>
                   );
                 })}
+              </div>
+            </div>
+          </div>
+
+          {/* Account Settings */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-800 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Account</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Sign Out</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Sign out of your account</p>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log Out
+                </Button>
               </div>
             </div>
           </div>

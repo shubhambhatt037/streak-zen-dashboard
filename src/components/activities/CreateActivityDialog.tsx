@@ -51,7 +51,8 @@ const CreateActivityDialog = ({ onCreateActivity }: CreateActivityDialogProps) =
     'Work',
     'Hobbies',
     'Social',
-    'Wellness'
+    'Wellness',
+    'Others'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,39 +77,44 @@ const CreateActivityDialog = ({ onCreateActivity }: CreateActivityDialogProps) =
           Create Activity
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create New Activity</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gray-900 dark:text-white">Create New Activity</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               Add a new habit to track. Choose a name, category, and how often you want to do it.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Activity Name</Label>
+              <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">Activity Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Morning Workout"
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category" className="text-gray-700 dark:text-gray-300">Category</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
+                    <SelectItem 
+                      key={category} 
+                      value={category}
+                      className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
                       {category}
                     </SelectItem>
                   ))}
@@ -117,26 +123,26 @@ const CreateActivityDialog = ({ onCreateActivity }: CreateActivityDialogProps) =
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="frequency">Frequency</Label>
+              <Label htmlFor="frequency" className="text-gray-700 dark:text-gray-300">Frequency</Label>
               <Select
                 value={formData.frequency}
                 onValueChange={(value: 'daily' | 'weekly' | 'custom') => 
                   setFormData({ ...formData, frequency: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <SelectItem value="daily" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Daily</SelectItem>
+                  <SelectItem value="weekly" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Weekly</SelectItem>
+                  <SelectItem value="custom" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid gap-2">
-              <Label>Color</Label>
+              <Label className="text-gray-700 dark:text-gray-300">Color</Label>
               <div className="flex gap-2 flex-wrap">
                 {colors.map((color) => (
                   <button

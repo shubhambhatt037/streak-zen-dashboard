@@ -84,7 +84,20 @@ const ActivitiesView = () => {
     setActivities(prev => [...prev, activity]);
   };
 
-  const categories = ['all', 'Health & Fitness', 'Personal Growth', 'Learning', 'Work', 'Hobbies', 'Social', 'Wellness'];
+  const handleDeleteActivity = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this activity?')) {
+      setActivities(prev => prev.filter(activity => activity.id !== id));
+    }
+  };
+
+  const handleEditActivity = (id: string) => {
+    // For now, just log the edit action
+    // In a real app, you'd open an edit dialog similar to create
+    console.log('Edit activity:', id);
+    alert('Edit functionality coming soon!');
+  };
+
+  const categories = ['all', 'Health & Fitness', 'Personal Growth', 'Learning', 'Work', 'Hobbies', 'Social', 'Wellness', 'Others'];
 
   const filteredActivities = activities.filter(activity => {
     const matchesSearch = activity.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -169,10 +182,16 @@ const ActivitiesView = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => handleEditActivity(activity.id)}
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
                       <Edit3 className="w-5 h-5" />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => handleDeleteActivity(activity.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>

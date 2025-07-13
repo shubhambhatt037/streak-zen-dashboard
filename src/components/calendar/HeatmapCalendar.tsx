@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, startOfWeek, isSameDay } from 'date-fns';
+import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, startOfWeek, isSameDay, getMonth } from 'date-fns';
 
 interface ActivityData {
   date: string;
@@ -39,17 +39,17 @@ const HeatmapCalendar = () => {
     return 'bg-green-600 dark:bg-green-500';
   };
 
-  // Group days by weeks
+  // Group days by weeks starting from Sunday
   const weeks: Date[][] = [];
   let currentWeek: Date[] = [];
   
-  // Add empty cells for the beginning of the first week
-  const firstDayOfWeek = getDay(yearStart);
+  // Add empty cells for the beginning of the first week (if needed)
+  const firstDayOfWeek = getDay(yearStart); // 0 = Sunday, 1 = Monday, etc.
   for (let i = 0; i < firstDayOfWeek; i++) {
     currentWeek.push(new Date(0)); // placeholder date
   }
 
-  allDays.forEach((day, index) => {
+  allDays.forEach((day) => {
     currentWeek.push(day);
     
     if (currentWeek.length === 7) {
@@ -71,6 +71,33 @@ const HeatmapCalendar = () => {
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Calculate month positions for labels
+  const getMonthPositions = () => {
+    const positions: { month: string; position: number }[] = [];
+    let currentMonth = -1;
+    
+    weeks.forEach((week, weekIndex) => {
+      week.forEach((day) => {
+        if (day.getTime() !== 0) { // not a placeholder
+          const month = getMonth(day);
+          if (month !== currentMonth) {
+            currentMonth = month;
+            positions.push({
+              month: monthLabels[month],
+              position: weekIndex * 16 // 16px = w-4 (1rem) + gap
+            });
+          }
+        }
+      });
+    });
+    
+    return positions;
+  };
+
+  const monthPositions = getMonthPositions();
+
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-800">
       <div className="flex items-center justify-between mb-6">
@@ -79,23 +106,30 @@ const HeatmapCalendar = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="flex gap-1 mb-2">
-          {monthLabels.map((month, index) => (
-            <div key={month} className="text-xs text-gray-500 dark:text-gray-400 w-8 text-center">
-              {index % 2 === 0 ? month : ''}
+        {/* Month labels */}
+        <div className="relative mb-2 h-4">
+          {monthPositions.map((pos, index) => (
+            <div 
+              key={index}
+              className="absolute text-xs text-gray-500 dark:text-gray-400"
+              style={{ left: `${pos.position + 32}px` }}
+            >
+              {pos.month}
             </div>
           ))}
         </div>
 
         <div className="flex gap-1">
-          <div className="flex flex-col gap-1 mr-2">
-            {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((day, index) => (
+          {/* Day labels */}
+          <div className="flex flex-col gap-1 mr-2 w-8">
+            {dayLabels.map((day, index) => (
               <div key={index} className="h-3 text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                {day}
+                {index % 2 === 1 ? day : ''}
               </div>
             ))}
           </div>
 
+          {/* Calendar grid */}
           <div className="flex gap-1">
             {weeks.map((week, weekIndex) => (
               <div key={weekIndex} className="flex flex-col gap-1">
