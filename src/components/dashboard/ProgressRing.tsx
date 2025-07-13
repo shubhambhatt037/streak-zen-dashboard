@@ -32,7 +32,7 @@ const ProgressRing = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#F3F4F6"
+          stroke="hsl(var(--muted))"
           strokeWidth={strokeWidth}
           fill="none"
         />

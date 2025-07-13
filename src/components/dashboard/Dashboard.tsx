@@ -79,12 +79,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 min-h-screen">
-      <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-6">
+    <div className="flex-1 bg-background min-h-screen">
+      <header className="bg-card shadow-sm border-b border-border px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Hello Olivia</h1>
-            <p className="text-gray-600 mt-1">Keep up the great work with your habits!</p>
+            <h1 className="text-3xl font-bold text-foreground">Hello Olivia</h1>
+            <p className="text-muted-foreground mt-1">Keep up the great work with your habits!</p>
           </div>
           <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 flex items-center gap-2">
             <Plus className="w-5 h-5" />
@@ -128,17 +128,17 @@ const Dashboard = () => {
         </div>
 
         {/* Weekly Overview */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg mb-8 border border-gray-100">
+        <div className="bg-card rounded-2xl p-6 shadow-lg mb-8 border border-border">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Weekly Overview</h2>
-            <div className="text-sm text-gray-500">February 2025</div>
+            <h2 className="text-xl font-bold text-card-foreground">Weekly Overview</h2>
+            <div className="text-sm text-muted-foreground">February 2025</div>
           </div>
           
           <div className="flex items-center justify-center">
             <ProgressRing progress={75} size={150}>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">75%</div>
-                <div className="text-sm text-gray-500">This week</div>
+                <div className="text-2xl font-bold text-card-foreground">75%</div>
+                <div className="text-sm text-muted-foreground">This week</div>
               </div>
             </ProgressRing>
           </div>
@@ -146,9 +146,9 @@ const Dashboard = () => {
           <div className="grid grid-cols-7 gap-4 mt-6">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
               <div key={day} className="text-center">
-                <div className="text-sm text-gray-500 mb-2">{day}</div>
+                <div className="text-sm text-muted-foreground mb-2">{day}</div>
                 <div className={`w-8 h-8 rounded-full mx-auto ${
-                  index < 5 ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'
+                  index < 5 ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-muted'
                 }`} />
               </div>
             ))}
@@ -157,7 +157,7 @@ const Dashboard = () => {
 
         {/* Activities Grid */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Your Activities</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Your Activities</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {activities.map((activity) => (
               <ActivityCard
