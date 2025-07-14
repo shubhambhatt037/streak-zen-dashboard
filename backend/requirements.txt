@@ -10,3 +10,4 @@ django-filter==24.1
 redis==5.0.1 
 gunicorn
 requests
+python-decouple
