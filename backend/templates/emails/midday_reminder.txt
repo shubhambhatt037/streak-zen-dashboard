@@ -1,0 +1,18 @@
+Keep Your Streak Alive! 🔥
+
+Hey {{ user.first_name|default:user.username }}!
+
+It's midday and you haven't completed any tasks yet today. Don't let your streak break! 🚀
+
+Take a small step right now to keep your momentum going. Remember, consistency is the key to building lasting habits.
+
+Your current activities:
+{% for activity in activities %}
+- {{ activity.title }} - {{ activity.current_streak }} day streak
+{% endfor %}
+
+Complete your tasks now: {{ dashboard_url }}
+
+You're receiving this email because you have active habits in StreakFlow.
+
+© 2024 StreakFlow. All rights reserved. 

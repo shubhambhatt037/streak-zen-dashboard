@@ -1,0 +1,20 @@
+One Last Push for Today! 🚀
+
+Hey {{ user.first_name|default:user.username }}!
+
+It's getting late and you still have some tasks left for today. Don't let your streak break before midnight! ⏰
+
+Tasks still to complete:
+{% for activity in incomplete_activities %}
+- {{ activity.title }} - {{ activity.current_streak }} day streak
+{% endfor %}
+
+You're so close! Complete these tasks before midnight to maintain your streak and keep building momentum.
+
+Remember: Every small step counts towards your bigger goals! 💪
+
+Complete your tasks now: {{ dashboard_url }}
+
+You're receiving this email because you have incomplete tasks in StreakFlow.
+
+© 2024 StreakFlow. All rights reserved. 
