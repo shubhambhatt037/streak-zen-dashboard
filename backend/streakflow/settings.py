@@ -78,29 +78,37 @@ WSGI_APPLICATION = 'streakflow.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# Default to SQLite for development, but prefer PostgreSQL
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='streakflow_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}
+# Optimized database configuration with connection pooling
+DATABASE_URL = config('DATABASE_URL', default='')
+DB_HOST = config('DB_HOST', default='')
 
-# Fallback to SQLite if PostgreSQL is not available
-if not config('DB_HOST', default=''):
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-
-# For production, use DATABASE_URL if provided
-if config('DATABASE_URL', default='').startswith('postgres://'):
+if DATABASE_URL.startswith('postgres://'):
     import dj_database_url
-    DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'))
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+elif DB_HOST:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='streakflow_db'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': DB_HOST,
+            'PORT': config('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'MAX_CONNS': config('DB_MAX_CONNS', default=20, cast=int),
+            },
+        }
+    }
+else:
+    # Fallback to SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -139,6 +147,31 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Caching Configuration - Critical for performance
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': config('REDIS_MAX_CONNECTIONS', default=50, cast=int),
+                'retry_on_timeout': True,
+            },
+        },
+        'KEY_PREFIX': 'streakflow',
+        'TIMEOUT': config('CACHE_TIMEOUT', default=300, cast=int),  # 5 minutes default
+    }
+}
+
+# Session engine - use cached sessions for better performance
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_CACHE_ALIAS = 'default'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -187,10 +220,11 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# CORS Settings
+# CORS Settings - Optimized for security and performance
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080').split(',')
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development
+# Only allow all origins in development
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
