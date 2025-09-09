@@ -44,6 +44,11 @@ class Activity(models.Model):
         verbose_name = 'Activity'
         verbose_name_plural = 'Activities'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['user', 'category']),
+            models.Index(fields=['user', 'frequency']),
+        ]
     
     def __str__(self):
         return f"{self.title} ({self.user.username})"
@@ -156,6 +161,12 @@ class StreakEntry(models.Model):
         verbose_name_plural = 'Streak Entries'
         unique_together = ['date', 'activity']
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['activity', 'date']),
+            models.Index(fields=['activity', 'date', 'completed']),
+            models.Index(fields=['date', 'completed']),
+            models.Index(fields=['activity', 'completed']),
+        ]
     
     def __str__(self):
         status = "✓" if self.completed else "✗"

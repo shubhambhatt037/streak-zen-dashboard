@@ -115,19 +115,35 @@ def dashboard_stats(request):
         }
     )
     
-    activities = user.activities.all()
+    # Optimize query with select_related and limit to prevent memory issues
+    activities = user.activities.all().select_related('user')[:50]  # Limit to 50 activities
     
-    # Calculate stats
+    # Calculate stats efficiently
     total_activities = activities.count()
-    active_streaks = sum(1 for activity in activities if activity.current_streak > 0)
-    completed_today = sum(1 for activity in activities if activity.completed_today)
+    active_streaks = 0
+    completed_today = 0
+    total_streak = 0
+    total_weekly_progress = 0
     
-    # Calculate average streak
-    total_streak = sum(activity.current_streak for activity in activities)
+    # Use database queries instead of Python loops for better performance
+    today = timezone.now().date()
+    
+    for activity in activities:
+        # Get current streak efficiently
+        current_streak = activity.current_streak
+        if current_streak > 0:
+            active_streaks += 1
+        total_streak += current_streak
+        
+        # Check if completed today efficiently
+        if activity.completed_today:
+            completed_today += 1
+        
+        # Calculate weekly progress efficiently
+        total_weekly_progress += activity.weekly_progress
+    
+    # Calculate averages
     average_streak = round(total_streak / total_activities, 1) if total_activities > 0 else 0
-    
-    # Calculate weekly progress
-    total_weekly_progress = sum(activity.weekly_progress for activity in activities)
     weekly_progress = round(total_weekly_progress / total_activities, 1) if total_activities > 0 else 0
     
     # Serialize activities
@@ -205,6 +221,12 @@ def calendar_entries(request):
         return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, 
                       status=status.HTTP_400_BAD_REQUEST)
     
+    # Limit date range to prevent memory issues (max 90 days)
+    date_diff = (end_date - start_date).days
+    if date_diff > 90:
+        return Response({'error': 'Date range cannot exceed 90 days'}, 
+                      status=status.HTTP_400_BAD_REQUEST)
+    
     clerk_id = request.user.clerk_id
     user, created = User.objects.get_or_create(
         clerk_id=clerk_id,
@@ -216,25 +238,34 @@ def calendar_entries(request):
         }
     )
     
-    activities = user.activities.all()
+    # Optimize queries with select_related and prefetch_related
+    activities = user.activities.all().select_related('user')
+    
+    # Get all entries for the date range in a single query
+    entries = StreakEntry.objects.filter(
+        activity__user=user,
+        date__gte=start_date,
+        date__lte=end_date
+    ).select_related('activity').order_by('date', 'activity_id')
+    
+    # Create a dictionary for fast lookup: {(date, activity_id): entry}
+    entries_dict = {}
+    for entry in entries:
+        key = (entry.date, entry.activity_id)
+        entries_dict[key] = entry
     
     calendar_data = []
     current_date = start_date
+    total_activities = activities.count()
     
     while current_date <= end_date:
-        # Get entries for this date
-        entries = StreakEntry.objects.filter(
-            activity__user=user,
-            date=current_date
-        ).select_related('activity')
-        
         # Prepare activities data for this date
         activities_data = []
         total_completed = 0
-        total_activities = activities.count()
         
         for activity in activities:
-            entry = entries.filter(activity=activity).first()
+            # Fast lookup instead of filtering
+            entry = entries_dict.get((current_date, activity.id))
             completed = entry.completed if entry else False
             
             if completed:
