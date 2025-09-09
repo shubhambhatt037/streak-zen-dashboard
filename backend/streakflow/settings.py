@@ -221,6 +221,10 @@ CORS_ALLOWED_ORIGINS = config(
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://streakflow-frontend.onrender.com",
+]
+
 # # Only allow all origins in development
 # CORS_ALLOW_ALL_ORIGINS = DEBUG
 
