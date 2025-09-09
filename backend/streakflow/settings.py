@@ -78,37 +78,30 @@ WSGI_APPLICATION = 'streakflow.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# Optimized database configuration with connection pooling
-DATABASE_URL = config('DATABASE_URL', default='')
-DB_HOST = config('DB_HOST', default='')
+# Default to local Postgres; fallback to SQLite if no DB_HOST
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='streakflow_db'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
+}
 
-if DATABASE_URL.startswith('postgres://'):
+if not config('DB_HOST', default=''):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+
+# Optimized database configuration with connection pooling
+# For production, use DATABASE_URL if provided
+DATABASE_URL = config('DATABASE_URL', default='')
+if DATABASE_URL:
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
-elif DB_HOST:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='streakflow_db'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': DB_HOST,
-            'PORT': config('DB_PORT', default='5432'),
-            'OPTIONS': {
-                'MAX_CONNS': config('DB_MAX_CONNS', default=20, cast=int),
-            },
-        }
-    }
-else:
-    # Fallback to SQLite for development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
 
 
 # Password validation

@@ -1,16 +1,10 @@
 
 import { 
-  LayoutDashboard, 
-  Target, 
-  User, 
-  Settings, 
-  TrendingUp,
-  Calendar,
-  LogOut
-} from 'lucide-react';
-import { useState } from 'react';
+  useState 
+} from 'react';
 import { useClerkAuth } from '@/contexts/ClerkAuthContext';
 import { useClerk } from '@clerk/clerk-react';
+import { Icon } from '@/components/ui/Icon';
 
 interface SidebarProps {
   activeTab: string;
@@ -23,12 +17,12 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const { signOut } = useClerk();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'activities', label: 'Activities', icon: Target },
-    { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'dashboard', label: 'Dashboard', icon: 'layoutDashboard' as const },
+    { id: 'activities', label: 'Activities', icon: 'target' as const },
+    { id: 'calendar', label: 'Calendar', icon: 'calendar' as const },
+    { id: 'analytics', label: 'Analytics', icon: 'trendingUp' as const },
+    { id: 'profile', label: 'Profile', icon: 'user' as const },
+    { id: 'settings', label: 'Settings', icon: 'settings' as const },
   ];
 
   const handleLogout = async () => {
@@ -43,8 +37,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     <aside className={`bg-sidebar text-sidebar-foreground transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} h-screen flex flex-col border-r border-sidebar-border flex-shrink-0`}>
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-transparent">
+            <img src="/logo.png" alt="StreakFlow" className="w-8 h-8 object-contain" />
           </div>
           {!isCollapsed && (
             <div>
@@ -58,7 +52,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
-            const Icon = item.icon;
             const isActive = activeTab === item.id;
             
             return (
@@ -71,7 +64,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
                       : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon name={item.icon} className="w-5 h-5" />
                   {!isCollapsed && <span className="font-medium">{item.label}</span>}
                 </button>
               </li>
@@ -108,7 +101,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
               onClick={handleLogout}
               className="flex items-center gap-2 w-full px-3 py-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <Icon name="logOut" className="w-4 h-4" />
               <span className="text-sm">Logout</span>
             </button>
           )}

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Award, Target, Flame } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { useClerkAuth } from '@/contexts/ClerkAuthContext';
 import { activitiesAPI, UserProfileStats } from '@/lib/activities';
 
@@ -116,7 +116,7 @@ const ProfileView = () => {
             <div className="bg-card rounded-2xl p-6 shadow-lg border border-border mb-6">
               <div className="text-center mb-6">
                 <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-12 h-12 text-white" />
+                  <Icon name="user" className="w-12 h-12 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold text-card-foreground">
                   {user.full_name || user.first_name || user.username || 'User'}
@@ -128,11 +128,11 @@ const ProfileView = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-muted-foreground">
-                  <Mail className="w-5 h-5" />
+                  <Icon name="user" className="w-5 h-5" />
                   <span>{user.email || 'No email provided'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-muted-foreground">
-                  <Calendar className="w-5 h-5" />
+                  <Icon name="calendar" className="w-5 h-5" />
                   <span>Member since {joinDate}</span>
                 </div>
               </div>
@@ -144,21 +144,21 @@ const ProfileView = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-blue-500" />
+                    <Icon name="target" className="w-5 h-5 text-blue-500" />
                     <span className="text-muted-foreground">Total Activities</span>
                   </div>
                   <span className="font-semibold text-card-foreground">{stats.total_activities}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Flame className="w-5 h-5 text-orange-500" />
+                    <Icon name="flame" className="w-5 h-5 text-orange-500" />
                     <span className="text-muted-foreground">Total Streaks</span>
                   </div>
                   <span className="font-semibold text-card-foreground">{stats.total_streaks}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-purple-500" />
+                    <Icon name="trendingUp" className="w-5 h-5 text-purple-500" />
                     <span className="text-muted-foreground">Longest Streak</span>
                   </div>
                   <span className="font-semibold text-card-foreground">{stats.longest_streak} days</span>

@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Target, Flame, Calendar, TrendingUp } from 'lucide-react';
 import StatCard from './StatCard';
 import ActivityCard from './ActivityCard';
 import ProgressRing from './ProgressRing';
@@ -204,14 +203,14 @@ const Dashboard = () => {
       <header className="bg-card shadow-sm border-b border-border px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Hello {user?.full_name || user?.first_name || user?.username || 'User'}
+            <h1 className="text-3xl text-foreground">
+              hello, <span className="font-bold">{user?.full_name || user?.first_name || user?.username || 'User'}</span>
             </h1>
             <p className="text-muted-foreground mt-1">Keep up the great work with your habits!</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <CreateActivityDialog onCreateActivity={handleCreateActivity} />
-            <p className="text-sm font-medium text-foreground border-b-2 border-purple-500 pb-1">
+            <p className="text-sm font-medium text-foreground">
               {format(today, 'EEEE, MMMM d, yyyy')}
             </p>
           </div>
@@ -225,14 +224,14 @@ const Dashboard = () => {
             title="Total Activities"
             value={total_activities}
             subtitle="Activities tracked"
-            icon={Target}
+            icon="target"
             gradient="from-blue-500 to-cyan-500"
           />
           <StatCard
             title="Active Streaks"
             value={active_streaks}
             subtitle="Currently running"
-            icon={Flame}
+            icon="flame"
             trend={{ value: "+2 this week", isPositive: true }}
             gradient="from-orange-500 to-red-500"
           />
@@ -240,14 +239,14 @@ const Dashboard = () => {
             title="Completed Today"
             value={`${completed_today}/${total_activities}`}
             subtitle="Daily progress"
-            icon={Calendar}
+            icon="calendar"
             gradient="from-green-500 to-emerald-500"
           />
           <StatCard
             title="Average Streak"
             value={average_streak}
             subtitle="Days on average"
-            icon={TrendingUp}
+            icon="trendingUp"
             gradient="from-purple-500 to-pink-500"
           />
         </div>

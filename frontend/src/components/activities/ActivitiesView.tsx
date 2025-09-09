@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Edit3, Trash2, CheckCircle, Circle } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import CreateActivityDialog from './CreateActivityDialog';
 import { activitiesAPI, Activity } from '@/lib/activities';
 import { useClerkAuth } from '@/contexts/ClerkAuthContext';
@@ -226,7 +226,7 @@ const ActivitiesView = () => {
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg mb-8 border border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Icon name="search" className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search activities..."
@@ -237,7 +237,7 @@ const ActivitiesView = () => {
             </div>
             
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-400" />
+              <Icon name="filter" className="w-5 h-5 text-gray-400" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -303,9 +303,9 @@ const ActivitiesView = () => {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                         </svg>
                       ) : activity.completed_today ? (
-                        <CheckCircle className="w-5 h-5" />
+                        <Icon name="checkCircle" className="w-5 h-5" />
                       ) : (
-                        <Circle className="w-5 h-5" />
+                        <Icon name="circle" className="w-5 h-5" />
                       )}
                     </button>
 
@@ -313,13 +313,13 @@ const ActivitiesView = () => {
                       onClick={() => handleEditActivity(activity.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                     >
-                      <Edit3 className="w-5 h-5" />
+                      <Icon name="user" className="w-5 h-5" />
                     </button>
                     <button 
                       onClick={() => handleDeleteActivity(activity.id)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Icon name="logOut" className="w-5 h-5" />
                     </button>
                   </div>
                 </div>

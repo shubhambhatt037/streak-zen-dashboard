@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { CheckCircle, Circle, Flame, Target, Calendar } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { Activity } from '@/lib/activities';
 
 interface ActivityCardProps {
@@ -64,9 +64,9 @@ const ActivityCard = ({ activity, onComplete }: ActivityCardProps) => {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
             </svg>
           ) : activity.completed_today ? (
-            <CheckCircle className="w-6 h-6" />
+            <Icon name="checkCircle" className="w-6 h-6" />
           ) : (
-            <Circle className="w-6 h-6" />
+            <Icon name="circle" className="w-6 h-6" />
           )}
         </button>
       </div>
@@ -74,7 +74,7 @@ const ActivityCard = ({ activity, onComplete }: ActivityCardProps) => {
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Flame className="w-4 h-4 text-orange-500" />
+            <Icon name="flame" className="w-4 h-4 text-orange-500" />
             <span className="text-lg font-bold text-card-foreground">{activity.current_streak || 0}</span>
           </div>
           <div className="text-xs text-muted-foreground">Current</div>
@@ -82,7 +82,7 @@ const ActivityCard = ({ activity, onComplete }: ActivityCardProps) => {
         
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Target className="w-4 h-4 text-blue-500" />
+            <Icon name="target" className="w-4 h-4 text-blue-500" />
             <span className="text-lg font-bold text-blue-600">{activity.best_streak || 0}</span>
           </div>
           <div className="text-xs text-muted-foreground">Best</div>
@@ -90,7 +90,7 @@ const ActivityCard = ({ activity, onComplete }: ActivityCardProps) => {
         
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Calendar className="w-4 h-4 text-green-500" />
+            <Icon name="calendar" className="w-4 h-4 text-green-500" />
             <span className="text-lg font-bold text-green-600">{activity.total_completions || 0}</span>
           </div>
           <div className="text-xs text-muted-foreground">Total</div>
