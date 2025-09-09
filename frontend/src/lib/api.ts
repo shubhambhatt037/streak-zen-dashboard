@@ -29,10 +29,25 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Clear token and redirect to sign-in
-      localStorage.removeItem('clerk_token');
-      // You can redirect to Clerk sign-in here if needed
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Check if it's a token expiration error
+      const errorData = error.response?.data;
+      const isTokenExpired = errorData?.code === 'TOKEN_EXPIRED' || 
+                           errorData?.error?.toLowerCase().includes('expired') ||
+                           error.response?.headers['x-token-expired'] === 'true';
+      
+      if (isTokenExpired) {
+        console.log('Token expired, clearing and will retry with fresh token');
+        // Clear expired token
+        localStorage.removeItem('clerk_token');
+        
+        // For token expiration, we don't want to redirect immediately
+        // Let the retry mechanism handle getting a fresh token
+      } else {
+        // For other auth errors, clear token and potentially redirect
+        localStorage.removeItem('clerk_token');
+        console.log('Authentication error, clearing token');
+      }
     }
     return Promise.reject(error);
   }

@@ -25,9 +25,22 @@ export const useApiWithRetry = () => {
         
         // If it's an auth error and we have retries left, try again
         if ((error.response?.status === 401 || error.response?.status === 403) && attempt < maxRetries) {
-          console.log(`Auth error, retrying... (attempt ${attempt + 1}/${maxRetries + 1})`);
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const errorData = error.response?.data;
+          const isTokenExpired = errorData?.code === 'TOKEN_EXPIRED' || 
+                               errorData?.error?.toLowerCase().includes('expired') ||
+                               error.response?.headers['x-token-expired'] === 'true';
+          
+          if (isTokenExpired) {
+            console.log(`Token expired, refreshing and retrying... (attempt ${attempt + 1}/${maxRetries + 1})`);
+            // Clear the expired token to force a fresh one
+            localStorage.removeItem('clerk_token');
+            // Wait a bit before retrying to allow token refresh
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            console.log(`Auth error, retrying... (attempt ${attempt + 1}/${maxRetries + 1})`);
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
           continue;
         }
         

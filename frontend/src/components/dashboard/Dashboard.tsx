@@ -5,11 +5,13 @@ import ActivityCard from './ActivityCard';
 import ProgressRing from './ProgressRing';
 import { activitiesAPI, Activity, DashboardStats } from '@/lib/activities';
 import { useClerkAuth } from '@/contexts/ClerkAuthContext';
+import { useApiWithRetry } from '@/hooks/useApiWithRetry';
 import CreateActivityDialog from '../activities/CreateActivityDialog';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useClerkAuth();
+  const { apiCallWithRetry } = useApiWithRetry();
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,7 +33,7 @@ const Dashboard = () => {
     try {
       setIsLoading(true);
       setError('');
-      const data = await activitiesAPI.getDashboardStats();
+      const data = await apiCallWithRetry(() => activitiesAPI.getDashboardStats());
       setDashboardData(data);
     } catch (err: any) {
       setError('Failed to load dashboard data');
@@ -77,8 +79,8 @@ const Dashboard = () => {
     setDashboardData({ ...dashboardData, activities: newActivities, ...stats });
 
     try {
-      // Call API
-      const result = await activitiesAPI.completeActivity(activityId);
+      // Call API with retry mechanism
+      const result = await apiCallWithRetry(() => activitiesAPI.completeActivity(activityId));
       // Use the returned activity to update the state
       const returnedActivity = result.activity;
       // Use the latest activities array (from optimistic update)
@@ -116,7 +118,7 @@ const Dashboard = () => {
         target_days: 1
       };
       
-      await activitiesAPI.createActivity(activityData);
+      await apiCallWithRetry(() => activitiesAPI.createActivity(activityData));
       await fetchDashboardData(); // Refresh dashboard data
     } catch (err: any) {
       console.error('Error creating activity:', err);

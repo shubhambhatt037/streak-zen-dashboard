@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, startOfWeek, isSameDay, getMonth } from 'date-fns';
 import { activitiesAPI, CalendarEntry } from '@/lib/activities';
 import { useClerkAuth } from '@/contexts/ClerkAuthContext';
+import { useApiWithRetry } from '@/hooks/useApiWithRetry';
 
 interface ActivityData {
   date: string;
@@ -13,6 +14,7 @@ interface ActivityData {
 
 const HeatmapCalendar = () => {
   const { isAuthenticated, isLoading: authLoading } = useClerkAuth();
+  const { apiCallWithRetry } = useApiWithRetry();
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,7 +43,7 @@ const HeatmapCalendar = () => {
       const startDate = format(yearStart, 'yyyy-MM-dd');
       const endDate = format(yearEnd, 'yyyy-MM-dd');
       
-      const calendarEntries: CalendarEntry[] = await activitiesAPI.getCalendarEntries(startDate, endDate);
+      const calendarEntries: CalendarEntry[] = await apiCallWithRetry(() => activitiesAPI.getCalendarEntries(startDate, endDate));
       
       // Transform the data to calculate completion percentages
       const transformedData: ActivityData[] = calendarEntries.map(entry => ({

@@ -32,7 +32,7 @@ const ActivitiesView = () => {
     try {
       setIsLoading(true);
       setError('');
-      const data = await activitiesAPI.getActivities();
+      const data = await apiCallWithRetry(() => activitiesAPI.getActivities());
       setActivities(data);
     } catch (err: any) {
       setError('Failed to load activities');
@@ -59,7 +59,7 @@ const ActivitiesView = () => {
         target_days: 1
       };
       
-      await activitiesAPI.createActivity(activityData);
+      await apiCallWithRetry(() => activitiesAPI.createActivity(activityData));
       await fetchActivities(); // Refresh the list
     } catch (err: any) {
       console.error('Error creating activity:', err);
@@ -115,8 +115,8 @@ const ActivitiesView = () => {
     setActivities(newActivities);
     setLoadingMap((map) => ({ ...map, [activityId]: true }));
     try {
-      // Call API
-      const result = await activitiesAPI.completeActivity(activityId);
+      // Call API with retry mechanism
+      const result = await apiCallWithRetry(() => activitiesAPI.completeActivity(activityId));
       const returnedActivity = result.activity;
       const refreshedActivities = [
         ...prevActivities.slice(0, activityIndex),
