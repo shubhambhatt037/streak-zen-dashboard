@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    "django_extensions",
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -221,7 +221,11 @@ CORS_ALLOWED_ORIGINS = config(
 
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:8000,http://127.0.0.1:8000"
+).split(",")
+
 
 # # Only allow all origins in development
 # CORS_ALLOW_ALL_ORIGINS = DEBUG
