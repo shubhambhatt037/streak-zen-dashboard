@@ -7,8 +7,12 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
 from django.contrib.auth import get_user_model
+from django.db import connection
+import logging
 from users.authentication import ClerkAuthentication
 from users.utils import get_or_create_user_with_clerk_data
+
+logger = logging.getLogger(__name__)
 
 from .models import Activity, StreakEntry
 from .serializers import (
@@ -207,6 +211,7 @@ def complete_activity(request, activity_id):
 @authentication_classes([ClerkAuthentication])
 def calendar_entries(request):
     """Get calendar entries for a date range with Clerk authentication"""
+    start_time = timezone.now()
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     
@@ -221,10 +226,10 @@ def calendar_entries(request):
         return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, 
                       status=status.HTTP_400_BAD_REQUEST)
     
-    # Limit date range to prevent memory issues (max 90 days)
+    # Limit date range to prevent memory issues (max 365 days for full year)
     date_diff = (end_date - start_date).days
-    if date_diff > 90:
-        return Response({'error': 'Date range cannot exceed 90 days'}, 
+    if date_diff > 365:
+        return Response({'error': 'Date range cannot exceed 365 days'}, 
                       status=status.HTTP_400_BAD_REQUEST)
     
     clerk_id = request.user.clerk_id
@@ -239,54 +244,122 @@ def calendar_entries(request):
     )
     
     # Optimize queries with select_related and prefetch_related
-    activities = user.activities.all().select_related('user')
+    # Limit activities to prevent memory issues with users who have many activities
+    activities = user.activities.all().select_related('user')[:100]  # Limit to 100 activities
+    total_activities = len(activities)
     
-    # Get all entries for the date range in a single query
-    entries = StreakEntry.objects.filter(
-        activity__user=user,
-        date__gte=start_date,
-        date__lte=end_date
-    ).select_related('activity').order_by('date', 'activity_id')
-    
-    # Create a dictionary for fast lookup: {(date, activity_id): entry}
-    entries_dict = {}
-    for entry in entries:
-        key = (entry.date, entry.activity_id)
-        entries_dict[key] = entry
-    
-    calendar_data = []
-    current_date = start_date
-    total_activities = activities.count()
-    
-    while current_date <= end_date:
-        # Prepare activities data for this date
-        activities_data = []
-        total_completed = 0
+    # For large date ranges, process in chunks to avoid memory issues
+    if date_diff > 90:
+        # Process in 3-month chunks for better memory management
+        chunk_size = 90
+        calendar_data = []
         
-        for activity in activities:
-            # Fast lookup instead of filtering
-            entry = entries_dict.get((current_date, activity.id))
-            completed = entry.completed if entry else False
+        current_chunk_start = start_date
+        while current_chunk_start <= end_date:
+            current_chunk_end = min(current_chunk_start + timedelta(days=chunk_size - 1), end_date)
             
-            if completed:
-                total_completed += 1
+            # Get entries for this chunk
+            entries = StreakEntry.objects.filter(
+                activity__user=user,
+                date__gte=current_chunk_start,
+                date__lte=current_chunk_end
+            ).select_related('activity').order_by('date', 'activity_id')
             
-            activities_data.append({
-                'id': activity.id,
-                'title': activity.title,
-                'color': activity.color,
-                'completed': completed,
-                'note': entry.note if entry else ''
+            # Create a dictionary for fast lookup: {(date, activity_id): entry}
+            entries_dict = {}
+            for entry in entries:
+                key = (entry.date, entry.activity_id)
+                entries_dict[key] = entry
+            
+            # Process this chunk
+            current_date = current_chunk_start
+            while current_date <= current_chunk_end:
+                # Prepare activities data for this date
+                activities_data = []
+                total_completed = 0
+                
+                for activity in activities:
+                    # Fast lookup instead of filtering
+                    entry = entries_dict.get((current_date, activity.id))
+                    completed = entry.completed if entry else False
+                    
+                    if completed:
+                        total_completed += 1
+                    
+                    activities_data.append({
+                        'id': activity.id,
+                        'title': activity.title,
+                        'color': activity.color,
+                        'completed': completed,
+                        'note': entry.note if entry else ''
+                    })
+                
+                calendar_data.append({
+                    'date': current_date.strftime('%Y-%m-%d'),
+                    'activities': activities_data,
+                    'total_completed': total_completed,
+                    'total_activities': total_activities
+                })
+                
+                current_date += timedelta(days=1)
+            
+            # Move to next chunk
+            current_chunk_start = current_chunk_end + timedelta(days=1)
+    else:
+        # For smaller date ranges, process all at once
+        entries = StreakEntry.objects.filter(
+            activity__user=user,
+            date__gte=start_date,
+            date__lte=end_date
+        ).select_related('activity').order_by('date', 'activity_id')
+        
+        # Create a dictionary for fast lookup: {(date, activity_id): entry}
+        entries_dict = {}
+        for entry in entries:
+            key = (entry.date, entry.activity_id)
+            entries_dict[key] = entry
+        
+        calendar_data = []
+        current_date = start_date
+        
+        while current_date <= end_date:
+            # Prepare activities data for this date
+            activities_data = []
+            total_completed = 0
+            
+            for activity in activities:
+                # Fast lookup instead of filtering
+                entry = entries_dict.get((current_date, activity.id))
+                completed = entry.completed if entry else False
+                
+                if completed:
+                    total_completed += 1
+                
+                activities_data.append({
+                    'id': activity.id,
+                    'title': activity.title,
+                    'color': activity.color,
+                    'completed': completed,
+                    'note': entry.note if entry else ''
+                })
+            
+            calendar_data.append({
+                'date': current_date.strftime('%Y-%m-%d'),
+                'activities': activities_data,
+                'total_completed': total_completed,
+                'total_activities': total_activities
             })
-        
-        calendar_data.append({
-            'date': current_date.strftime('%Y-%m-%d'),
-            'activities': activities_data,
-            'total_completed': total_completed,
-            'total_activities': total_activities
-        })
-        
-        current_date += timedelta(days=1)
+            
+            current_date += timedelta(days=1)
+    
+    # Log performance metrics
+    end_time = timezone.now()
+    duration = (end_time - start_time).total_seconds()
+    query_count = len(connection.queries)
+    
+    logger.info(f"Calendar entries request completed: {len(calendar_data)} days, "
+                f"{total_activities} activities, {query_count} queries, "
+                f"{duration:.2f}s duration")
     
     return Response(calendar_data)
 
