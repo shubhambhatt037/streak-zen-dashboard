@@ -6,6 +6,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.conf import settings
 import requests
 import logging
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -23,6 +24,9 @@ class ClerkAuthentication(authentication.BaseAuthentication):
             # Extract token from Authorization header
             token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
             
+            # Check if token is about to expire (within 5 minutes)
+            self.check_token_expiration(token)
+            
             # Verify token with Clerk
             user_data = self.verify_clerk_token(token)
             
@@ -31,9 +35,12 @@ class ClerkAuthentication(authentication.BaseAuthentication):
             
             return (user, None)
             
+        except AuthenticationFailed:
+            # Re-raise authentication failures as-is
+            raise
         except Exception as e:
             logger.error(f"Authentication failed: {str(e)}")
-            raise AuthenticationFailed(f'Invalid token: {str(e)}')
+            raise AuthenticationFailed(f'Authentication failed: {str(e)}')
     
     def verify_clerk_token(self, token):
         """Verify JWT token with Clerk using PyJWKClient"""
@@ -49,15 +56,50 @@ class ClerkAuthentication(authentication.BaseAuthentication):
                 signing_key.key,
                 algorithms=['RS256'],
                 issuer=clerk_issuer,
-                options={"verify_aud": False}  # Skip audience verification for now
+                options={
+                    "verify_aud": False,  # Skip audience verification for now
+                    "verify_exp": True,   # Verify expiration
+                    "leeway": 30          # Allow 30 seconds leeway for clock skew
+                }
             )
             return payload
+        except jwt.ExpiredSignatureError as e:
+            logger.warning(f"JWT token has expired: {str(e)}")
+            raise AuthenticationFailed('Token has expired. Please refresh your session.')
         except jwt.InvalidTokenError as e:
             logger.error(f"Invalid JWT token: {str(e)}")
             raise AuthenticationFailed(f'Invalid JWT token: {str(e)}')
         except Exception as e:
             logger.error(f"Token verification failed: {str(e)}")
             raise AuthenticationFailed(f'Token verification failed: {str(e)}')
+    
+    def check_token_expiration(self, token):
+        """Check if token is expired or about to expire"""
+        try:
+            # Decode token without verification to check expiration
+            payload = jwt.decode(token, options={"verify_signature": False})
+            exp_timestamp = payload.get('exp')
+            
+            if exp_timestamp:
+                exp_datetime = datetime.fromtimestamp(exp_timestamp)
+                current_time = datetime.utcnow()
+                time_until_expiry = exp_datetime - current_time
+                
+                # If token is already expired
+                if time_until_expiry.total_seconds() <= 0:
+                    logger.warning(f"Token expired {abs(time_until_expiry.total_seconds())} seconds ago")
+                    raise AuthenticationFailed('Token has expired. Please refresh your session.')
+                
+                # If token expires within 5 minutes, log a warning
+                elif time_until_expiry.total_seconds() <= 300:  # 5 minutes
+                    logger.info(f"Token expires in {time_until_expiry.total_seconds()} seconds")
+                    
+        except jwt.InvalidTokenError:
+            # If we can't decode the token, let the main verification handle it
+            pass
+        except Exception as e:
+            logger.error(f"Error checking token expiration: {str(e)}")
+            # Don't raise here, let the main verification handle it
     
     def fetch_user_from_clerk_api(self, clerk_id):
         """Fetch user data from Clerk's API"""
