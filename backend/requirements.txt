@@ -14,4 +14,4 @@ dj_database_url==2.2.0
 cryptography==43.0.1
 django-redis==5.4.0
 PyJWT==2.9.0
-
+django-extensions==3.2.3
