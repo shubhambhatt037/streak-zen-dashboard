@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import health_views
 
 app_name = 'activities'
 
@@ -20,4 +21,7 @@ urlpatterns = [
     
     # Analytics
     path('analytics/', views.analytics, name='analytics'),
+    
+    # Health Check endpoints
+    path('health/', health_views.health_check, name='health_check'),
 ] 

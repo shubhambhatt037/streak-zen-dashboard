@@ -6,6 +6,7 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from activities import health_views
 
 # Schema view for API documentation
 schema_view = get_schema_view(
@@ -22,6 +23,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Root health check endpoint for cron jobs
+    path('', health_views.root_health, name='root_health'),
+    
     path('admin/', admin.site.urls),
     
     # API URLs
