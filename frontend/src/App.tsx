@@ -85,6 +85,16 @@ const AppRoutes = () => {
           <SignUpPage />
         </PublicRoute>
       } />
+      <Route path="/sign-in/sso-callback" element={
+        <PublicRoute>
+          <SignInPage />
+        </PublicRoute>
+      } />
+      <Route path="/sso-callback" element={
+        <PublicRoute>
+          <SignInPage />
+        </PublicRoute>
+      } />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

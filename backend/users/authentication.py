@@ -17,7 +17,12 @@ class ClerkAuthentication(authentication.BaseAuthentication):
     
     def authenticate(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
+        print(f"🔐 ClerkAuthentication.authenticate() called")
+        print(f"🔐 Auth header: {auth_header[:50] + '...' if auth_header and len(auth_header) > 50 else auth_header}")
+        
         if not auth_header:
+            print("❌ No authorization header found")
+            logger.info("No authorization header found")
             return None
         
         try:
@@ -39,11 +44,12 @@ class ClerkAuthentication(authentication.BaseAuthentication):
             
             return (user, None)
             
-        except AuthenticationFailed:
+        except AuthenticationFailed as e:
+            logger.error(f"Authentication failed: {str(e)}")
             # Re-raise authentication failures as-is
             raise
         except Exception as e:
-            logger.error(f"Authentication failed: {str(e)}")
+            logger.error(f"Unexpected authentication error: {str(e)}")
             raise AuthenticationFailed(f'Authentication failed: {str(e)}')
     
     def verify_clerk_token(self, token):

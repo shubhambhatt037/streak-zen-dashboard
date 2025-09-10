@@ -84,3 +84,21 @@ def debug_auth(request):
         'duplicates': [{'clerk_id': clerk_id, 'count': count} for clerk_id, count in duplicates],
         'message': 'Authentication debug information'
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def test_auth(request):
+    """Test endpoint to debug authentication flow"""
+    auth_header = request.META.get('HTTP_AUTHORIZATION')
+    
+    return Response({
+        'status': 'auth_test',
+        'timestamp': timezone.now().isoformat(),
+        'has_auth_header': bool(auth_header),
+        'auth_header_preview': auth_header[:50] + '...' if auth_header and len(auth_header) > 50 else auth_header,
+        'request_user': str(request.user) if hasattr(request, 'user') else 'No user',
+        'request_user_type': str(type(request.user)) if hasattr(request, 'user') else 'No user',
+        'is_authenticated': request.user.is_authenticated if hasattr(request, 'user') else False,
+        'message': 'Authentication test information'
+    }, status=status.HTTP_200_OK)

@@ -19,7 +19,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost,127.0.0.1', 'streakflow-backend.onrender.com', 'streakflow-frontend.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'streakflow-backend.onrender.com', 'streakflow-frontend.onrender.com']
 
 
 # Application definition
@@ -308,6 +308,11 @@ LOGGING = {
     },
     'loggers': {
         'users.authentication': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'users.views': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

@@ -16,29 +16,56 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     authentication_classes = [ClerkAuthentication]
     
     def get_object(self):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Immediate debug print
+        print(f"🔍 UserProfileView.get_object() called - request.user: {self.request.user}")
+        print(f"🔍 User type: {type(self.request.user)}")
+        print(f"🔍 User authenticated: {getattr(self.request.user, 'is_authenticated', 'No is_authenticated attr')}")
+        
+        # Debug: Log the request user
+        logger.info(f"UserProfileView.get_object() - request.user: {self.request.user}")
+        logger.info(f"UserProfileView.get_object() - request.user type: {type(self.request.user)}")
+        logger.info(f"UserProfileView.get_object() - request.user attributes: {dir(self.request.user)}")
+        
         # Get user by Clerk ID
+        if not hasattr(self.request.user, 'clerk_id') or not self.request.user.clerk_id:
+            print(f"❌ User does not have a valid Clerk ID. User: {self.request.user}")
+            logger.error(f"User does not have a valid Clerk ID. User: {self.request.user}")
+            raise ValueError("User does not have a valid Clerk ID")
+        
         clerk_id = self.request.user.clerk_id
-        user, created = User.objects.get_or_create(
-            clerk_id=clerk_id,
-            defaults={
-                'username': self.request.user.username or self.request.user.email,
-                'email': self.request.user.email,
-                'first_name': self.request.user.first_name or '',
-                'last_name': self.request.user.last_name or '',
-            }
-        )
+        logger.info(f"Processing user with Clerk ID: {clerk_id}")
         
-        # Update user data if not created
-        if not created:
-            if self.request.user.email and self.request.user.email != user.email:
-                user.email = self.request.user.email
-            if self.request.user.first_name and self.request.user.first_name != user.first_name:
-                user.first_name = self.request.user.first_name
-            if self.request.user.last_name and self.request.user.last_name != user.last_name:
-                user.last_name = self.request.user.last_name
-            user.save()
-        
-        return user
+        try:
+            user, created = User.objects.get_or_create(
+                clerk_id=clerk_id,
+                defaults={
+                    'username': getattr(self.request.user, 'username', '') or getattr(self.request.user, 'email', ''),
+                    'email': getattr(self.request.user, 'email', ''),
+                    'first_name': getattr(self.request.user, 'first_name', '') or '',
+                    'last_name': getattr(self.request.user, 'last_name', '') or '',
+                }
+            )
+            
+            logger.info(f"User {'created' if created else 'found'}: {user.username}")
+            
+            # Update user data if not created
+            if not created:
+                if getattr(self.request.user, 'email', None) and self.request.user.email != user.email:
+                    user.email = self.request.user.email
+                if getattr(self.request.user, 'first_name', None) and self.request.user.first_name != user.first_name:
+                    user.first_name = self.request.user.first_name
+                if getattr(self.request.user, 'last_name', None) and self.request.user.last_name != user.last_name:
+                    user.last_name = self.request.user.last_name
+                user.save()
+            
+            return user
+            
+        except Exception as e:
+            logger.error(f"Error in get_object(): {str(e)}")
+            raise
 
 
 class UserUpdateView(generics.UpdateAPIView):
@@ -48,24 +75,27 @@ class UserUpdateView(generics.UpdateAPIView):
     authentication_classes = [ClerkAuthentication]
     
     def get_object(self):
+        if not hasattr(self.request.user, 'clerk_id') or not self.request.user.clerk_id:
+            raise ValueError("User does not have a valid Clerk ID")
+        
         clerk_id = self.request.user.clerk_id
         user, created = User.objects.get_or_create(
             clerk_id=clerk_id,
             defaults={
-                'username': self.request.user.username or self.request.user.email,
-                'email': self.request.user.email,
-                'first_name': self.request.user.first_name or '',
-                'last_name': self.request.user.last_name or '',
+                'username': getattr(self.request.user, 'username', '') or getattr(self.request.user, 'email', ''),
+                'email': getattr(self.request.user, 'email', ''),
+                'first_name': getattr(self.request.user, 'first_name', '') or '',
+                'last_name': getattr(self.request.user, 'last_name', '') or '',
             }
         )
         
         # Update user data if not created
         if not created:
-            if self.request.user.email and self.request.user.email != user.email:
+            if getattr(self.request.user, 'email', None) and self.request.user.email != user.email:
                 user.email = self.request.user.email
-            if self.request.user.first_name and self.request.user.first_name != user.first_name:
+            if getattr(self.request.user, 'first_name', None) and self.request.user.first_name != user.first_name:
                 user.first_name = self.request.user.first_name
-            if self.request.user.last_name and self.request.user.last_name != user.last_name:
+            if getattr(self.request.user, 'last_name', None) and self.request.user.last_name != user.last_name:
                 user.last_name = self.request.user.last_name
             user.save()
         
@@ -80,14 +110,17 @@ def user_stats(request):
     from activities.models import Activity
     
     # Get or create user
+    if not hasattr(request.user, 'clerk_id') or not request.user.clerk_id:
+        return Response({'error': 'User does not have a valid Clerk ID'}, status=status.HTTP_400_BAD_REQUEST)
+    
     clerk_id = request.user.clerk_id
     user, created = User.objects.get_or_create(
         clerk_id=clerk_id,
         defaults={
-            'username': request.user.username or request.user.email,
-            'email': request.user.email,
-            'first_name': request.user.first_name or '',
-            'last_name': request.user.last_name or '',
+            'username': getattr(request.user, 'username', '') or getattr(request.user, 'email', ''),
+            'email': getattr(request.user, 'email', ''),
+            'first_name': getattr(request.user, 'first_name', '') or '',
+            'last_name': getattr(request.user, 'last_name', '') or '',
         }
     )
     
@@ -142,14 +175,17 @@ def user_profile_stats(request):
     from datetime import timedelta
     
     # Get or create user
+    if not hasattr(request.user, 'clerk_id') or not request.user.clerk_id:
+        return Response({'error': 'User does not have a valid Clerk ID'}, status=status.HTTP_400_BAD_REQUEST)
+    
     clerk_id = request.user.clerk_id
     user, created = User.objects.get_or_create(
         clerk_id=clerk_id,
         defaults={
-            'username': request.user.username or request.user.email,
-            'email': request.user.email,
-            'first_name': request.user.first_name or '',
-            'last_name': request.user.last_name or '',
+            'username': getattr(request.user, 'username', '') or getattr(request.user, 'email', ''),
+            'email': getattr(request.user, 'email', ''),
+            'first_name': getattr(request.user, 'first_name', '') or '',
+            'last_name': getattr(request.user, 'last_name', '') or '',
         }
     )
     
