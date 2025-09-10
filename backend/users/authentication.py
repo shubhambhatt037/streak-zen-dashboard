@@ -24,14 +24,18 @@ class ClerkAuthentication(authentication.BaseAuthentication):
             # Extract token from Authorization header
             token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
             
+            logger.info(f"Authenticating user with token: {token[:20]}...")
+            
             # Check if token is about to expire (within 5 minutes)
             self.check_token_expiration(token)
             
             # Verify token with Clerk
             user_data = self.verify_clerk_token(token)
+            logger.info(f"Token verified successfully for user: {user_data.get('sub', 'unknown')}")
             
             # Get or create user
             user = self.get_or_create_user(user_data)
+            logger.info(f"Authentication successful for user: {user.username}")
             
             return (user, None)
             
@@ -135,7 +139,10 @@ class ClerkAuthentication(authentication.BaseAuthentication):
         """Get or create user from Clerk data, always update with latest Clerk info"""
         clerk_id = user_data.get('sub')  # Clerk user ID
         if not clerk_id:
+            logger.error("No user ID found in token payload")
             raise AuthenticationFailed('No user ID in token')
+
+        logger.info(f"Processing user creation/update for Clerk ID: {clerk_id}")
 
         # Extract Clerk fields from JWT
         email = user_data.get('email', '')
@@ -144,6 +151,8 @@ class ClerkAuthentication(authentication.BaseAuthentication):
         name = user_data.get('name')
         first_name = user_data.get('first_name')
         last_name = user_data.get('last_name')
+        
+        logger.info(f"JWT user data - email: {email}, given_name: {given_name}, family_name: {family_name}, name: {name}")
 
         # If JWT doesn't have user data, try to fetch from Clerk API
         if not any([email, given_name, family_name, name, first_name, last_name]):
@@ -184,29 +193,42 @@ class ClerkAuthentication(authentication.BaseAuthentication):
             username = f"{base_username}{counter}"
             counter += 1
 
-        user, created = User.objects.get_or_create(
-            clerk_id=clerk_id,
-            defaults={
-                'username': username,
-                'email': email,
-                'first_name': use_first,
-                'last_name': use_last,
-            }
-        )
-        # Always update user with latest Clerk info
-        updated = False
-        if user.email != email and email:
-            user.email = email
-            updated = True
-        if user.first_name != use_first and use_first:
-            user.first_name = use_first
-            updated = True
-        if user.last_name != use_last and use_last:
-            user.last_name = use_last
-            updated = True
-        if user.username != username and username:
-            user.username = username
-            updated = True
-        if updated:
-            user.save()
-        return user 
+        try:
+            user, created = User.objects.get_or_create(
+                clerk_id=clerk_id,
+                defaults={
+                    'username': username,
+                    'email': email,
+                    'first_name': use_first,
+                    'last_name': use_last,
+                }
+            )
+            
+            if created:
+                logger.info(f"Created new user: {username} with Clerk ID: {clerk_id}")
+            else:
+                logger.info(f"Found existing user: {username} with Clerk ID: {clerk_id}")
+            
+            # Always update user with latest Clerk info
+            updated = False
+            if user.email != email and email:
+                user.email = email
+                updated = True
+            if user.first_name != use_first and use_first:
+                user.first_name = use_first
+                updated = True
+            if user.last_name != use_last and use_last:
+                user.last_name = use_last
+                updated = True
+            if user.username != username and username:
+                user.username = username
+                updated = True
+            if updated:
+                user.save()
+                logger.info(f"Updated user info for: {username}")
+            
+            return user
+            
+        except Exception as e:
+            logger.error(f"Error creating/updating user with Clerk ID {clerk_id}: {str(e)}")
+            raise AuthenticationFailed(f'Failed to create or update user: {str(e)}') 

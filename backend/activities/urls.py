@@ -24,4 +24,5 @@ urlpatterns = [
     
     # Health Check endpoints
     path('health/', health_views.health_check, name='health_check'),
+    path('debug-auth/', health_views.debug_auth, name='debug_auth'),
 ] 

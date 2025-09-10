@@ -40,3 +40,47 @@ def root_health(request):
         'timestamp': timezone.now().isoformat(),
         'message': 'StreakFlow Backend is running'
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def debug_auth(request):
+    """Debug endpoint to help troubleshoot authentication issues"""
+    from django.contrib.auth import get_user_model
+    from django.db import connection
+    
+    User = get_user_model()
+    
+    # Get basic stats
+    total_users = User.objects.count()
+    users_with_clerk_id = User.objects.exclude(clerk_id__isnull=True).exclude(clerk_id='').count()
+    
+    # Get recent users
+    recent_users = list(User.objects.order_by('-created_at')[:5].values(
+        'id', 'username', 'clerk_id', 'email', 'created_at'
+    ))
+    
+    # Check for duplicate Clerk IDs
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT clerk_id, COUNT(*) as count 
+            FROM users 
+            WHERE clerk_id IS NOT NULL 
+            GROUP BY clerk_id 
+            HAVING COUNT(*) > 1
+        """)
+        duplicates = cursor.fetchall()
+    
+    return Response({
+        'status': 'debug_info',
+        'timestamp': timezone.now().isoformat(),
+        'user_stats': {
+            'total_users': total_users,
+            'users_with_clerk_id': users_with_clerk_id,
+            'users_without_clerk_id': total_users - users_with_clerk_id,
+            'duplicate_clerk_ids': len(duplicates),
+        },
+        'recent_users': recent_users,
+        'duplicates': [{'clerk_id': clerk_id, 'count': count} for clerk_id, count in duplicates],
+        'message': 'Authentication debug information'
+    }, status=status.HTTP_200_OK)
