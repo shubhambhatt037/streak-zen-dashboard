@@ -19,7 +19,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'streakflow-backend.onrender.com', 'streakflow-frontend.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'streakflow-backend.onrender.com', 'streakflow-frontend.onrender.com', 'app.streakflow.shubhambhatt.me']
 
 
 # Application definition
@@ -224,14 +224,14 @@ SIMPLE_JWT = {
 # CORS Settings - Optimized for security and performance
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080,https://streakflow-frontend.onrender.com'
+    default='http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080,https://streakflow-frontend.onrender.com,https://app.streakflow.shubhambhatt.me'
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:8000,http://127.0.0.1:8000"
+    default="http://localhost:8000,http://127.0.0.1:8000,https://app.streakflow.shubhambhatt.me"
 ).split(",")
 
 
